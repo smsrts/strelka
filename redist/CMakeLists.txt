@@ -70,9 +70,39 @@ superset(THIS_ADDITIONAL_LIB "${THIS_ADDITIONAL_LIB}")
 
 
 #
+# bzip2
+#
+set(BZIP2_PREFIX "bzip2-1.0.8")
+superset(BZIP2_DIR "${CMAKE_CURRENT_BINARY_DIR}/${BZIP2_PREFIX}")
+superset(BZIP2_LIBRARY "${BZIP2_DIR}/libbz2.a")
+
+add_custom_command(
+    OUTPUT ${BZIP2_DIR}
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${BZIP2_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E tar xzf "${THIS_REDIST_DIR}/${BZIP2_PREFIX}.tar.gz"
+    COMMENT "Unpacking bzli2 library")
+
+set (BZIP2_FINAL_TASK ${BZIP2_DIR})
+
+if (NOT WIN32)
+    add_custom_command(
+        OUTPUT ${BZIP2_LIBRARY}
+        COMMAND $(MAKE)  >bzip2.build.log 2>bzip2.build.error.log || \(echo "Failed to build bzip2, see ${BZIP2_DIR}/bzip2.build.error.log for details." && exit 1\)
+        WORKING_DIRECTORY ${BZIP2_DIR}
+        DEPENDS ${BZIP2_DIR}
+        COMMENT "Building bzip2 library")
+
+    set (BZIP2_FINAL_TASK ${BZIP2_LIBRARY})
+endif ()
+
+set(THIS_BZIP2LIB "${THIS_PROJECT_NAME}_bzip2lib")
+add_custom_target(${THIS_BZIP2LIB} DEPENDS "${BZIP2_FINAL_TASK}")
+
+
+#
 # htslib
 #
-set(HTSLIB_PREFIX "htslib-1.7-6-g6d2bfb7")
+set(HTSLIB_PREFIX "htslib-1.14")
 superset(HTSLIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HTSLIB_PREFIX}")
 superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 
@@ -84,6 +114,7 @@ superset(HTSLIB_LIBRARY "${HTSLIB_DIR}/libhts.a")
 ## Debug build optoins for htslib/samtools
 #set(HTSLIB_CFLAGS '-O0 -g')
 #set(HTSLIB_CONFIGOPT CFLAGS=${HTSLIB_CFLAGS} LDFLAGS=${HTSLIB_CFLAGS})
+set(HTSLIB_CONFIGOPT CFLAGS=-I${BZIP2_DIR} LDFLAGS=-L${BZIP2_DIR})
 
 add_custom_command(
     OUTPUT ${HTSLIB_DIR}
@@ -96,9 +127,10 @@ set (HTSLIB_FINAL_TASK ${HTSLIB_DIR})
 if (NOT WIN32)
     add_custom_command(
         OUTPUT ${HTSLIB_LIBRARY}
-        COMMAND ./configure CC=${CMAKE_C_COMPILER} ${HTSLIB_CONFIGOPT} --disable-libcurl --disable-bz2 --disable-lzma >htslib.config.log 2>htslib.config.error.log || \(echo "Failed to configure htslib, see ${HTSLIB_DIR}/htslib.config.error.log for details." && exit 1\)
+        COMMAND ./configure CC=${CMAKE_C_COMPILER} ${HTSLIB_CONFIGOPT} --disable-libcurl --disable-lzma >htslib.config.log 2>htslib.config.error.log || \(echo "Failed to configure htslib, see ${HTSLIB_DIR}/htslib.config.error.log for details." && exit 1\)
         COMMAND $(MAKE) lib-static bgzip htsfile tabix >htslib.build.log 2>htslib.build.error.log || \(echo "Failed to build htslib, see ${HTSLIB_DIR}/htslib.build.error.log for details." && exit 1\)
         WORKING_DIRECTORY ${HTSLIB_DIR}
+        DEPENDS ${BZIP2_LIBRARY}
         DEPENDS ${HTSLIB_DIR}
         COMMENT "Building htslib library")
 
@@ -118,7 +150,7 @@ endif ()
 #
 # samtools
 #
-set(SAMTOOLS_PREFIX "samtools-1.6")
+set(SAMTOOLS_PREFIX "samtools-1.14")
 set(SAMTOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${SAMTOOLS_PREFIX}")
 set(SAMTOOLS_LIBRARY "${SAMTOOLS_DIR}/libbam.a")
 superset(SAMTOOLS_PROG "${SAMTOOLS_DIR}/samtools")
