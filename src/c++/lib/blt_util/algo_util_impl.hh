@@ -46,5 +46,6 @@ getDuplicatesInSortedInput(
             begin2++;
         }
     }
-    return std::move(dups);
+    return dups;
+    //return std::move(dups);
 }
