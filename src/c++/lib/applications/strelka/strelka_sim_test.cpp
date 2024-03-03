@@ -47,7 +47,7 @@
 
 #include "strelka_common/StrelkaSampleSetSummary.hh"
 
-
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 typedef boost::mt19937 gen_t;
 typedef boost::poisson_distribution<> dist_t;
 typedef boost::variate_generator<gen_t&,dist_t> vgen_t;
