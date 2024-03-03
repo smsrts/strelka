@@ -52,7 +52,7 @@ else ()
 
     target_link_libraries (${TEST_TARGET_NAME} ${LIBRARY_TARGET_NAME}
                            ${PROJECT_TEST_LIBRARY_TARGETS} ${PROJECT_PRIMARY_LIBRARY_TARGETS}
-                           ${HTSLIB_LIBRARY} ${Boost_LIBRARIES} ${THIS_ADDITIONAL_LIB})
+                           ${HTSLIB_LIBRARY} ${BZIP2_LIBRARY} ${Boost_LIBRARIES} ${THIS_ADDITIONAL_LIB})
 
     set(TEST_BINARY ${CMAKE_CURRENT_BINARY_DIR}/${TEST_TARGET_NAME})
 
